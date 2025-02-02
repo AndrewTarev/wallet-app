@@ -1,0 +1,219 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API для операций с кошельком.",
+        "title": "Wallet",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/create-wallet": {
+            "post": {
+                "description": "Генерирует новый кошелек с начальным балансом 0",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wallets"
+                ],
+                "summary": "Создание нового кошелька",
+                "responses": {
+                    "201": {
+                        "description": "Созданный кошелек",
+                        "schema": {
+                            "$ref": "#/definitions/domain.Wallet"
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка при создании",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/wallet": {
+            "post": {
+                "description": "Пополнение или снятие средств с кошелька",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wallets"
+                ],
+                "summary": "Изменение баланса кошелька",
+                "parameters": [
+                    {
+                        "description": "Данные операции",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.WalletOperation"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Операция выполнена",
+                        "schema": {
+                            "$ref": "#/definitions/http.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка валидации данных",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/wallets/{walletId}": {
+            "get": {
+                "description": "Возвращает баланс указанного кошелька",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "wallets"
+                ],
+                "summary": "Получение баланса кошелька",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UUID кошелька",
+                        "name": "walletId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Баланс кошелька",
+                        "schema": {
+                            "$ref": "#/definitions/domain.WalletBalance"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный UUID",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Кошелек не найден",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/http.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "domain.OperationType": {
+            "type": "string",
+            "enum": [
+                "DEPOSIT",
+                "WITHDRAW"
+            ],
+            "x-enum-varnames": [
+                "Deposit",
+                "Withdraw"
+            ]
+        },
+        "domain.Wallet": {
+            "type": "object",
+            "properties": {
+                "balance": {
+                    "type": "number"
+                },
+                "walletId": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.WalletBalance": {
+            "type": "object",
+            "properties": {
+                "balance": {
+                    "type": "number"
+                }
+            }
+        },
+        "domain.WalletOperation": {
+            "type": "object",
+            "required": [
+                "amount",
+                "operationType",
+                "walletId"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "string"
+                },
+                "operationType": {
+                    "enum": [
+                        "DEPOSIT",
+                        "WITHDRAW"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.OperationType"
+                        }
+                    ]
+                },
+                "walletId": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

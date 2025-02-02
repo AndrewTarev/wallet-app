@@ -1,0 +1,143 @@
+basePath: /api/v1
+definitions:
+  domain.OperationType:
+    enum:
+    - DEPOSIT
+    - WITHDRAW
+    type: string
+    x-enum-varnames:
+    - Deposit
+    - Withdraw
+  domain.Wallet:
+    properties:
+      balance:
+        type: number
+      walletId:
+        type: string
+    type: object
+  domain.WalletBalance:
+    properties:
+      balance:
+        type: number
+    type: object
+  domain.WalletOperation:
+    properties:
+      amount:
+        type: string
+      operationType:
+        allOf:
+        - $ref: '#/definitions/domain.OperationType'
+        enum:
+        - DEPOSIT
+        - WITHDRAW
+      walletId:
+        type: string
+    required:
+    - amount
+    - operationType
+    - walletId
+    type: object
+  http.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  http.SuccessResponse:
+    properties:
+      message:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API для операций с кошельком.
+  title: Wallet
+  version: "1.0"
+paths:
+  /create-wallet:
+    post:
+      consumes:
+      - application/json
+      description: Генерирует новый кошелек с начальным балансом 0
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Созданный кошелек
+          schema:
+            $ref: '#/definitions/domain.Wallet'
+        "400":
+          description: Ошибка при создании
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "500":
+          description: Ошибка сервера
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Создание нового кошелька
+      tags:
+      - wallets
+  /wallet:
+    post:
+      consumes:
+      - application/json
+      description: Пополнение или снятие средств с кошелька
+      parameters:
+      - description: Данные операции
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.WalletOperation'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Операция выполнена
+          schema:
+            $ref: '#/definitions/http.SuccessResponse'
+        "400":
+          description: Ошибка валидации данных
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Изменение баланса кошелька
+      tags:
+      - wallets
+  /wallets/{walletId}:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает баланс указанного кошелька
+      parameters:
+      - description: UUID кошелька
+        in: path
+        name: walletId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Баланс кошелька
+          schema:
+            $ref: '#/definitions/domain.WalletBalance'
+        "400":
+          description: Неверный UUID
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "404":
+          description: Кошелек не найден
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "500":
+          description: Ошибка сервера
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Получение баланса кошелька
+      tags:
+      - wallets
+swagger: "2.0"
